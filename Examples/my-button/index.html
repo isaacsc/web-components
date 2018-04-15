@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>My Button</title>
+    <link rel="import" href="my-button.html">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        button {
+            padding: 24px;
+            margin: 24px;
+            background: cadetblue;
+        }
+    </style>
+</head>
+<body>
+    
+    <my-button></my-button>
+    
+    <script type="module">
+        // import MyButton from "./my-button.js";
+        // customElements.define('my-button', MyButton);
+        document.querySelector('my-button').addEventListener('my-button-clicked', e => console.log(e));
+    </script>
+</body>
+</html>
