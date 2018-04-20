@@ -1,0 +1,156 @@
+<template id="sliderCarousel">
+    <style>
+      :host {
+        display: block;
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        contain: content;
+      }
+
+      :host::after {
+        display: block;
+        content: '';
+        padding-top: 75%; /* 4:3 = height is 75% of width */
+      }
+
+      ::slotted([selected]){
+        width: 100%;
+        height: 100%;
+        position: absolute;
+      }
+
+      ::slotted(:not([selected])) {
+        display: none;
+      }
+
+      button {
+        position: absolute;
+        top: calc(50% - 20px);
+        padding: 0;
+        line-height: 40px;
+        border: none;
+        background: none;
+        color: #DDD;
+        font-size: 40px;
+        font-weight: bold;
+        opacity: 0.7;
+        cursor: pointer;
+      }
+
+      button:hover,
+      button:focus {
+        opacity: 1;
+      }
+
+      #prevBtn {
+        left: 12px;
+      }
+
+      #nextBtn {
+        right: 12px;
+      }
+
+      button[disabled] {
+        opacity: 0.4;
+        cursor: auto;
+        pointer-events: none;
+      }
+      
+    </style>
+    <slot></slot> 
+    <button id="prevBtn">&#x276E;</button>
+    <button id="nextBtn">&#x276F;</button>
+    
+  </template>
+  <script>
+    let selected_ = null;
+    class sliderCarousel extends HTMLElement {
+      static get observedAttributes() {
+        return ['selected'];
+      }
+
+      get selected() {
+        return selected_;
+      }
+      
+      set selected(idx) {
+        selected_ = idx;
+        this.setAttribute('selected', idx);
+      }
+
+      constructor() {
+        super();
+        let shadowRoot = this.attachShadow({mode: 'open'});
+        var link = document.querySelector('link[rel="import"]');
+        var content = link.import;
+        const t = content.querySelector('#sliderCarousel');
+        const instance = t.content.cloneNode(true);
+        shadowRoot.appendChild(instance);
+
+        this.btnPrev = this.shadowRoot.querySelector('#prevBtn');
+        this.btnNext = this.shadowRoot.querySelector('#nextBtn');
+      }
+  
+      connectedCallback() {
+        this.images = Array.prototype.slice.call(this.children);
+        this.selected = this._findFirstSelectedTab() || 0;
+        this.btnPrev.addEventListener('click', this.prev.bind(this));
+        this.btnNext.addEventListener('click', this.next.bind(this));
+      }
+
+      disconnectedCallback() {
+        this.btnPrev.removeEventListener('click', this.prev.bind(this));
+        this.btnNext.removeEventListener('click', this.next.bind(this));
+      }
+
+      attributeChangedCallback(name, oldValue, newValue) {
+        if (name === 'selected') {
+          if(oldValue) {
+            this.children[oldValue].removeAttribute('selected');
+          }
+          this.children[newValue].setAttribute('selected', '');
+          this.btnNext.disabled = !(this.selected < this.children.length - 1);
+          this.btnPrev.disabled = !(this.selected > 0);
+
+          let selected = this.querySelector('[selected]')
+
+          this._loadImage(selected);
+          this._loadImage(selected.previousElementSibling);
+          this._loadImage(selected.nextElementSibling);
+        }
+      }
+
+      next() {
+        this.selected++;
+      }
+
+      prev() {
+        this.selected--;
+      }
+
+      show(idx) {
+        if (idx >= 0 && idx < this.children.length){
+          this.selected = idx;
+        }
+      }
+
+      _findFirstSelectedTab() {
+        let selectedIdx;
+        for (let [i, img] of this.images.entries()) {
+          if (img.hasAttribute('selected')) {
+            selectedIdx = i;
+          }
+        }
+        return selectedIdx;
+      }
+
+      _loadImage(img) {
+        if (img && !img.src) {
+          img.src = img.getAttribute('data-src');
+        }
+      }
+    }
+
+    customElements.define('slider-carousel', sliderCarousel);
+  </script>
